@@ -497,7 +497,14 @@ local function createContent(line)
   local extensions = { "%.jpeg", "%.jpg", "%.png", "%.gif", "%.bmp", "%.tif", "%.tiff", "%.webp" }
   for _, ext in ipairs(extensions) do
     if string.find(line:lower(), ext .. "$") then
-      return { type = "image_url", image_url = { url = line } }
+      if string.find(line:lower(), "^https?:") then
+        return { type = "image_url", image_url = { url = line } }
+      else
+        local base64 = io.popen("base64 -w 0 " .. line, "r")
+        local encoded = base64:read("*a")
+        base64:close()
+        return { type = "image_url", image_url = { url = "data:image/jpeg;base64," .. encoded } }
+      end
     end
   end
   return { type = "text", text = line }
